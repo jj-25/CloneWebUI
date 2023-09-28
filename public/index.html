@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clone Web Html + CSS</title>
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"
+      integrity="sha512-emSwuKiMyYedRwflbZB2ghzX8Cw8fmNVgZ6yQNNXXagFzFOaQmbvQ1vmDkddHjm5AITcBIZfC7k4ShQSjgPAmQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      function App() {
+        const inputRef = React.useRef();
+        const [url, setUrl] = React.useState(
+          "https://www.york.ac.uk/teaching/cws/wws/webpage1.html"
+        );
+
+        const [res, setRes] = React.useState({
+          html: "",
+          css: "",
+        });
+
+        React.useEffect(() => {
+          inputRef.current.focus();
+        }, []);
+
+        const handleSubmit = async () => {
+          const res = await axios.post("/getWebClone", {
+            url,
+          });
+          if (res.status === 200) {
+            setRes(res.data);
+            console.log("🚀 res data:", res.data);
+          }
+        };
+
+        const onCopy = (id) => {
+          const URL = document.getElementById(id);
+          navigator.clipboard
+            .writeText(URL.innerText)
+            .then(() => alert("copied"))
+            .catch((error) => console.log(error));
+        };
+
+        return (
+          <div className="container">
+            <div className="search-box">
+              <input
+                placeholder="paste url"
+                type="text"
+                ref={inputRef}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <button onClick={handleSubmit}>Submit</button>
+            </div>
+
+            <div className="result-box">
+              <div className="html-container">
+                <h2>HTML:</h2>{" "}
+                <button className="copy-button" onClick={() => onCopy("html")}>
+                  Copy
+                </button>
+                <div id="html">{res.html}</div>
+              </div>
+              <div className="css-container">
+                <h2>CSS:</h2>
+                <button className="copy-button" onClick={() => onCopy("css")}>
+                  Copy
+                </button>
+                <div id="css">{res.css}</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      ReactDOM.createRoot(document.querySelector("#root")).render(<App />);
+    </script>
+  </body>
+</html>
