@@ -24,44 +24,45 @@
   <body>
     <div id="root"></div>
     <script type="text/babel">
+      const initResult = {
+        html: "",
+        css: "",
+      };
+
       function App() {
         const inputRef = React.useRef();
         const [url, setUrl] = React.useState(
           "https://www.york.ac.uk/teaching/cws/wws/webpage1.html"
         );
-
-        const [res, setRes] = React.useState({
-          html: "",
-          css: "",
-        });
+        const [result, setResult] = React.useState(initResult);
+        const [loading, setLoading] = React.useState(false);
 
         React.useEffect(() => {
           inputRef.current.focus();
         }, []);
 
         const handleSubmit = async () => {
+          setLoading(true);
+          setResult(initResult);
           const res = await axios.post("/getWebClone", {
             url,
           });
           if (res.status === 200) {
-            setRes(res.data);
-            console.log("🚀 res data:", res.data);
+            setResult(res.data);
+            setLoading(false);
+            // console.log("🚀 res data:", res.data);
           }
-        };
-
-        const onCopy = (id) => {
-          const URL = document.getElementById(id);
-          navigator.clipboard
-            .writeText(URL.innerText)
-            .then(() => alert("copied"))
-            .catch((error) => console.log(error));
         };
 
         return (
           <div className="container">
+            <div className="title-box">
+              <h1>Clone Web Page UI</h1>
+              <p>Paste target website URL and click submit button.</p>
+            </div>
             <div className="search-box">
               <input
-                placeholder="paste url"
+                placeholder="paste url here"
                 type="text"
                 ref={inputRef}
                 onChange={(e) => setUrl(e.target.value)}
@@ -71,21 +72,57 @@
 
             <div className="result-box">
               <div className="html-container">
-                <h2>HTML:</h2>{" "}
-                <button className="copy-button" onClick={() => onCopy("html")}>
-                  Copy
-                </button>
-                <div id="html">{res.html}</div>
+                <h2>HTML:</h2>
+                <div id="html">
+                  <Result type="html" loading={loading} data={result.html} />
+                </div>
               </div>
               <div className="css-container">
                 <h2>CSS:</h2>
-                <button className="copy-button" onClick={() => onCopy("css")}>
-                  Copy
-                </button>
-                <div id="css">{res.css}</div>
+                <div id="css">
+                  <Result type="css" loading={loading} data={result.css} />
+                </div>
               </div>
             </div>
           </div>
+        );
+      }
+
+      function Result({ type, loading, data }) {
+        const onCopy = () => {
+          const URL = document.getElementById(type);
+          navigator.clipboard
+            .writeText(URL.innerText)
+            .then(() => alert("copied"))
+            .catch((error) => console.log(error));
+        };
+
+        if (loading) return <div>loading...</div>;
+        if (data)
+          return (
+            <React.Fragment>
+              <CopyButton onCopy={onCopy} />
+              {data}
+            </React.Fragment>
+          );
+        return <div>no result</div>;
+      }
+
+      function CopyButton({ onCopy, data }) {
+        return (
+          <button className="copy-button" onClick={() => onCopy(data)}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="256"
+              height="256"
+              viewBox="0 0 256 256"
+            >
+              <path
+                fill="currentColor"
+                d="M216 32H88a8 8 0 0 0-8 8v40H40a8 8 0 0 0-8 8v128a8 8 0 0 0 8 8h128a8 8 0 0 0 8-8v-40h40a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8Zm-56 176H48V96h112Zm48-48h-32V88a8 8 0 0 0-8-8H96V48h112Z"
+              />
+            </svg>
+          </button>
         );
       }
       ReactDOM.createRoot(document.querySelector("#root")).render(<App />);
